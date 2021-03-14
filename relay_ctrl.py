@@ -1,6 +1,6 @@
 import threading
 import pid
-import Adafruit_BBIO.GPIO as GPIO
+from gpiozero import LED
 import sensor
 
 class relay_ctrl():
@@ -11,8 +11,8 @@ class relay_ctrl():
         self.gpioC=gpioC
         self.tmp=0
         self.period=period
-        GPIO.setup(self.gpioH,GPIO.OUT)
-        GPIO.setup(self.gpioC,GPIO.OUT)
+        self.gpio_h=LED(self.gpioH)
+        self.gpio_c=LED(self.gpioC)
         self.sensor=sensor
         self.pid=pid
         self.ctlOn=False
@@ -27,11 +27,11 @@ class relay_ctrl():
 
         if(self.pid.getCtlSig()!=0):
             if self.pid.getCtlSig() > 0 :
-                GPIO.output(self.gpioH,GPIO.HIGH)
-                GPIO.output(self.gpioC,GPIO.LOW)
+                self.gpio_h.on()
+                self.gpio_c.off()
             else:
-                GPIO.output(self.gpioC,GPIO.HIGH)
-                GPIO.output(self.gpioH,GPIO.LOW)
+                self.gpio_h.off()
+                self.gpio_c.on()
             self.onDelay=abs(self.pid.getCtlSig())/100.*self.period
             self.offDelay=self.period-self.onDelay
             if (self.onDelay< self.period):
@@ -42,8 +42,8 @@ class relay_ctrl():
                 self.timer = threading.Timer(self.period, self.on)
                 self.timer.start()
         else:
-            GPIO.output(self.gpioH,GPIO.LOW)
-            GPIO.output(self.gpioC,GPIO.LOW)
+            self.gpio_h.off()
+            self.gpio_c.off()
             self.timer = threading.Timer(self.period, self.on)
             self.timer.start()
         self.server.update()
@@ -51,8 +51,8 @@ class relay_ctrl():
     def off(self):
         if self.ctlOn==False:
             return
-        GPIO.output(self.gpioH,GPIO.LOW)
-        GPIO.output(self.gpioC,GPIO.LOW)
+        self.gpio_h.off()
+        self.gpio_c.off()
         self.timer = threading.Timer(self.offDelay, self.on)
         self.timer.start()
         self.server.update()
@@ -80,23 +80,23 @@ class relay_ctrl():
         return self.ctlOn
 
     def coolerOn(self):
-        GPIO.output(self.gpioC,GPIO.HIGH)
+        self.gpio_c.on()
 
     def coolerOff(self):
-        GPIO.output(self.gpioC,GPIO.LOW)
+        self.gpio_c.off()
 
     def heaterOn(self):
-        GPIO.output(self.gpioH,GPIO.HIGH)
+        self.gpio_h.on()
 
     def heaterOff(self):
-        GPIO.output(self.gpioH,GPIO.LOW)
+        self.gpio_h.off()
 
     def allOff(self):
-        GPIO.output(self.gpioC,GPIO.LOW)
-        GPIO.output(self.gpioH,GPIO.LOW)
+        self.gpio_h.off()
+        self.gpio_c.off()
 
     def coolerIsOn(self):
-        return bool(GPIO.input(self.gpioC))
+        return self.gpio_c.is_lit
 
     def heaterIsOn(self):
-        return bool(GPIO.input(self.gpioH))
+        return self.gpio_h.is_lit

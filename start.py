@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-#from flup.server.fcgi import WSGIServer
-from _thread import start_new_thread
 import pt100 
 from relay_ctrl import relay_ctrl
 from pid import pid
@@ -9,14 +7,16 @@ from http_comm import http_comm
 import configparser
 from dataLogger import dataLogger
 from stirrer import stirrer
-import threading
 import tilt2_client
-import datetime
 import ntc
+import sysinfo
+import threading
+from datetime import datetime,timedelta
 
 class start:
 
     def __init__(self):
+        pass
         self.cfgName = "temp_reg.config"
         self.dataName = "data.csv"
         self.config = configparser.ConfigParser()
@@ -26,15 +26,22 @@ class start:
         self.ctlConfig=self.config['Controller']
         self.serverConfig=self.config['Server']
 
+        self.sysinfo = sysinfo.Sysinfo()
+
         self.logfile =self.dataName
         self.fh=open(self.logfile, "a+")
 
         #self.logger=dataLogger(self.dataName)
 
-        self.stirrer1 = stirrer("P9_14","P9_12")
+        self.stirrer1 = stirrer(13,26)
 
         self.t1 = pt100.PT100()
         self.t1.update()
+
+        threading.Thread(target=self.t1.run).start()
+
+
+
         self.ntc1 = ntc.Ntc('P9_39',beta=3889)
         self.ntc2 = ntc.Ntc('P9_37')
 
@@ -49,7 +56,7 @@ class start:
         self.setPoint=self.pid1.getSetPoint()
 
 
-        self.ctl1 = relay_ctrl(self.pid1,self.t1,self.ctlConfig.get("HeaterPort","P8_13"),self.ctlConfig.get("CoolerPort","P9_42"),float(self.ctlConfig.get("CtlPeriod","10")))
+        self.ctl1 = relay_ctrl(self.pid1,self.t1,self.ctlConfig.get("HeaterPort",16),self.ctlConfig.get("CoolerPort",17),float(self.ctlConfig.get("CtlPeriod","10")))
         
 
         self.tilt = tilt2_client.Tilt2()
@@ -95,24 +102,27 @@ class start:
         return self.setPoint
 
     def mainLoop(self):
+        last_time=datetime.today()
         self.ctl1.run()
         ramping=False;
         while True:
+            delta_t = (datetime.today()-last_time)/timedelta(milliseconds=1)/1000.
+            last_time=datetime.today()
             if(self.ramp != 0):
                 if(self.pid1.getSetPoint()==self.setPoint):
                     pass
                 else:
                     if(abs(self.pid1.getSetPoint() - self.setPoint)) <= (self.ramp/60.):
                         self.pid1.setSetPoint(self.setPoint)
-                        self.stirrer1.play([[2000,1],[0,1],[2000,1],[0,1],[2000,1],[0,0]])
+                        #self.stirrer1.play([[2000,1],[0,1],[2000,1],[0,1],[2000,1],[0,0]])
                     elif(self.pid1.getSetPoint() < self.setPoint ) :
-                        self.pid1.setSetPoint(self.pid1.getSetPoint()+self.ramp/60.)
+                        self.pid1.setSetPoint(self.pid1.getSetPoint()+(self.ramp/60.*delta_t))
                     elif(self.pid1.getSetPoint() > self.setPoint ) :
-                        self.pid1.setSetPoint(self.pid1.getSetPoint()-self.ramp/60.)
+                        self.pid1.setSetPoint(self.pid1.getSetPoint()-self.ramp/60.*delta_t)
             else:
                 self.pid1.setSetPoint(self.setPoint)
-                    
-            self.t1.update()
+
+
             self.ntc1.update()
             self.ntc2.update()
             if self.ctl1.isRunning():

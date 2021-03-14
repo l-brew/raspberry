@@ -18,7 +18,7 @@ class http_comm:
 
     def run(self):
         print('http run')
-        threading.Thread(target = self.fullStatus ).start()
+        threading.Thread(target = self.fullStatus).start()
         threading.Thread(target = self.listenToServer).start()
         threading.Thread(target = self.sendTimer).start()
 
@@ -134,14 +134,15 @@ class http_comm:
 
                 if writeConfig :
                     self.start.getCtlConfig()["SetPoint"]=str(self.start.getSetPoint())
-                    self.start.getCtlConfig()["K_p"]=str(self.pid.getK_p())
-                    self.start.getCtlConfig()["K_i"]=str(self.pid.getK_i())
+                    self.start.getCtlConfig()["K_p"]=str(self.start.pid1.getK_p())
+                    self.start.getCtlConfig()["K_i"]=str(self.start.pid1.getK_i())
                     self.start.writeConfig()
 
 
 
                
-            except:
+            except :
+                print("EXCEPT listenToServer")
                 time.sleep(1)
                         
     
@@ -176,7 +177,7 @@ class http_comm:
             'frozen' :self.start.pid1.getFrozen(),
             'tilt_temp' : self.start.tilt.temp,
             'tilt_grav' : self.start.tilt.grav,
-            'ntc1':self.start.ntc1.getVal(),
+            'ntc1':self.start.sysinfo.get_cpu_temp(),
             'ntc2': self.start.ntc2.getVal()
                 }
 

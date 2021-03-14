@@ -1,6 +1,5 @@
 import threading
-import Adafruit_BBIO.GPIO as GPIO
-import Adafruit_BBIO.PWM as PWM
+import RPi.GPIO as GPIO
 import time
 class stirrer:
     def __init__(self,pwm_pin,sd_pin):
@@ -9,6 +8,9 @@ class stirrer:
         self.duty = 0
         self.freq = 15000
         self.rampLock=False
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(pwm_pin, GPIO.OUT)
+        self.p = GPIO.PWM(self.pwm_pin, self.freq)  # frequency=50Hz
         GPIO.setup(sd_pin,GPIO.OUT)
         GPIO.output(sd_pin,GPIO.HIGH)
 
@@ -28,9 +30,10 @@ class stirrer:
             try:
                 if self.duty > 0:
                     GPIO.output(self.sd_pin,GPIO.LOW)
-                    PWM.start(self.pwm_pin,70-self.duty*0.65,self.freq)
+
+                    self.p.start(70-self.duty*0.65)
                 else :
-                    PWM.stop(self.pwm_pin)
+                    self.p.stop()
                     GPIO.output(self.sd_pin,GPIO.HIGH)
             except:
                 pass
@@ -59,7 +62,8 @@ class stirrer:
             try:
                 if self.duty > 0:
                     GPIO.output(self.sd_pin,GPIO.LOW)
-                    PWM.start(self.pwm_pin,70-self.duty*0.65,t[0])
+                    #PWM.start(self.pwm_pin,70-self.duty*0.65,t[0])
+
                     print(self.duty)
                 else:
                     GPIO.output(self.sd_pin,GPIO.HIGH)

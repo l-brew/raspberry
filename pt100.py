@@ -1,8 +1,8 @@
-import Adafruit_BBIO.GPIO as GPIO
-from Adafruit_BBIO.SPI import SPI
+import spidev
 import time
 from bisect import bisect_right
 from sensor import Sensor
+from gpiozero import LED
 
 CS_PIN= 'P9_25'
 
@@ -51,27 +51,30 @@ class PT100(Sensor):
     def __init__(self):
         self.val=None
         self.tempList=[]
-        self.spi = SPI(0, 0)
-        self.spi.msh=1000000
-        GPIO.setup(CS_PIN,GPIO.OUT)
-        GPIO.output(CS_PIN,GPIO.HIGH)
+        self.spi =spidev.SpiDev()
+        self.spi.open(0, 0)
+        self.spi.mode = 1
+        self.spi.max_speed_hz = 1000000
+        self.spi.no_cs=True
         self.inter=Interpolate(x,y)
+        self.cs=LED(8)
+        self.cs.on()
     
     def spi_read(self):
-        GPIO.output(CS_PIN,GPIO.LOW)
-        self.spi.xfer([REG_CONF,CNF_ONESHOT])
-        GPIO.output(CS_PIN,GPIO.HIGH)
+        self.cs.off()
+        self.spi.writebytes([REG_CONF,CNF_ONESHOT])
+        self.cs.on()
         time.sleep(0.1)
-        
-        GPIO.output(CS_PIN,GPIO.LOW)
-        self.spi.xfer([REG_LSB])
+
+        self.cs.off()
+        self.spi.writebytes([REG_LSB])
         lsb=self.spi.readbytes(1)
-        GPIO.output(CS_PIN,GPIO.HIGH)
-        
-        GPIO.output(CS_PIN,GPIO.LOW)
-        self.spi.xfer([REG_MSB])
+        self.cs.on()
+
+        self.cs.off()
+        self.spi.writebytes([REG_MSB])
         msb=self.spi.readbytes(1)
-        GPIO.output(CS_PIN,GPIO.HIGH)
+        self.cs.on()
         
         err=(False,True)[lsb[0]&1]
         
@@ -91,9 +94,8 @@ class PT100(Sensor):
             #self.val=None
             return
         value = value / 10.
-        
+
         res=(value/2**15*400)
-        
         self.tempList.append(self.inter(res))
         if len(self.tempList)> 5:
             del self.tempList[0]
@@ -101,3 +103,9 @@ class PT100(Sensor):
         for t in self.tempList:
             tSum=tSum+t
         self.val= tSum/len(self.tempList)
+        time.sleep(0.1)
+
+    def run(self):
+        while True:
+            self.update()
+            time.sleep(0.1)

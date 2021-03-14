@@ -1,4 +1,4 @@
-import Adafruit_BBIO.ADC as ADC
+#import Adafruit_BBIO.ADC as ADC
 import time
 import math
 from sensor import Sensor
@@ -11,7 +11,9 @@ T0 = 25. + KEL
 class Ntc(Sensor):
 
     def __init__(self,pin,beta=BETA,r0=R0,t0=T0):
+
         self.val = 0.0
+        return
         self.tempList = []
         self.pin=pin
         self.beta=beta
@@ -21,6 +23,7 @@ class Ntc(Sensor):
 
 
     def update(self):
+        return
         t = 0
         for i in range(5):
             adc = ADC.read(self.pin)
