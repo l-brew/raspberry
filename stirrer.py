@@ -1,6 +1,7 @@
 import threading
 import RPi.GPIO as GPIO
 import time
+import traceback
 class stirrer:
     def __init__(self,pwm_pin,sd_pin):
         self.pwm_pin=pwm_pin
@@ -36,6 +37,7 @@ class stirrer:
                     self.p.stop()
                     GPIO.output(self.sd_pin,GPIO.HIGH)
             except:
+                print(traceback.format_exc())
                 pass
             time.sleep(0.1)
         self.rampLock=False
@@ -68,6 +70,7 @@ class stirrer:
                 else:
                     GPIO.output(self.sd_pin,GPIO.HIGH)
             except:
+                print(traceback.format_exc())
                 pass
             time.sleep(t[1])
 

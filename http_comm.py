@@ -4,7 +4,8 @@ import ssl
 import threading
 import time
 from urllib.parse import urlencode, quote_plus
-
+import traceback
+import logging
 
 class http_comm:
     def __init__(self, start):
@@ -23,10 +24,12 @@ class http_comm:
         threading.Thread(target = self.sendTimer).start()
 
     def update(self):
-        try:
-            self.lock.release()
-        except RuntimeError:
-            pass
+        if self.lock.locked():
+            try:
+                self.lock.release()
+            except RuntimeError:
+                print(traceback.format_exc())
+                pass
 
 
     def sendTimer(self):
@@ -36,23 +39,29 @@ class http_comm:
 
 
     def listenToServer(self):
+        writeConfig=False
         while True:
             try:
-                conn = http.client.HTTPSConnection(self.server_address, context=self.sslContext)
+                print("LISTEN1")
+                conn = http.client.HTTPSConnection(self.server_address, context=self.sslContext,timeout=10)
                 conn.request("GET", "/brewserver/commands/listen/")
                 r1 = conn.getresponse()
-                form = json.loads(r1.read().decode('utf-8'))
+                response=r1.read()
+                if response is b'':
+                    continue
+                form = json.loads(response.decode('utf-8'))
+                logging.info("COMMAND:%s"%str(form))
                 if "ramp" in form.keys():
-                        self.start.setRamp(float(escape(form["ramp"])))
+                        self.start.setRamp(float(form["ramp"]))
                         writeConfig=True
                 if "soll" in form.keys():
-                    self.start.setSetPoint(float(escape(form["soll"])))
+                    self.start.setSetPoint(float(form["soll"]))
                     writeConfig=True
                 if "k_p" in form.keys():
-                    self.start.pid1.setK_p(float(escape(form["k_p"])))
+                    self.start.pid1.setK_p(float(form["k_p"]))
                     writeConfig=True
                 if "k_i" in form.keys():
-                    self.start.pid1.setK_i(float(escape(form["k_i"])))
+                    self.start.pid1.setK_i(float(form["k_i"]))
                     writeConfig=True
                 if "freeze" in form.keys():
                     if form["freeze"] == "true":
@@ -60,12 +69,12 @@ class http_comm:
                     if form["freeze"] == "false":
                         self.start.pid1.unfreeze()
                 if "i_err" in form.keys():
-                    self.start.pid1.setI_err(float(escape(form["i_err"]))/getK_i())
+                    self.start.pid1.setI_err(float(form["i_err"])/getK_i())
                 if "period" in form.keys():
-                    self.start.ctl1.setPeriod(float(escape(form["period"])))
+                    self.start.ctl1.setPeriod(float(form["period"]))
                 if "reg" in form.keys():
                     if form["reg"] == "on" :
-                       self.start.ctl1.run()
+                       self.start.ctl1.start()
                     elif form["reg"] == "off" :
                         self.start.ctl1.stop()
                         self.start.ctl1.allOff()
@@ -101,6 +110,7 @@ class http_comm:
                         try:
                             self.start.stirrer1.start(float(form["stirrer"]))
                         except :
+                            print(traceback.format_exc())
                             pass
                 if "rampUp" in form.keys():
                     print("ramp Up")
@@ -130,6 +140,7 @@ class http_comm:
                             self.start.setRamp(ramp)
                             self.start.setSetPoint(temp)
 
+
                 self.update()
 
                 if writeConfig :
@@ -142,14 +153,15 @@ class http_comm:
 
                
             except :
-                print("EXCEPT listenToServer")
-                time.sleep(1)
+                print(traceback.format_exc())
+                time.sleep(5)
+                continue
                         
     
     def fullStatus(self):
         
         while True:
-            print("report status")
+            #print("report status")
             power = self.start.pid1.getCtlSig()
             if power > 100:
                 power = 100
@@ -190,9 +202,11 @@ class http_comm:
                 f.write(r1.read().decode('utf-8'))
                 f.close()
             except:
+                print(traceback.format_exc())
+                time.sleep(5)
                 continue
-            # print(r1.status, r1.reason)
             self.lock.acquire()
+            self.lock.acquire(blocking=False)
 
 def escape(s):
     return s

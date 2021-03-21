@@ -12,7 +12,7 @@ import ntc
 import sysinfo
 import threading
 from datetime import datetime,timedelta
-
+import logging
 class start:
 
     def __init__(self):
@@ -102,8 +102,9 @@ class start:
         return self.setPoint
 
     def mainLoop(self):
+        print("start main")
         last_time=datetime.today()
-        self.ctl1.run()
+        threading.Thread(target=self.ctl1.run).start()
         ramping=False;
         while True:
             delta_t = (datetime.today()-last_time)/timedelta(milliseconds=1)/1000.
@@ -135,6 +136,8 @@ class start:
 
 
 if __name__=="__main__":
-    print("start bbb_brew", flush=True)
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', filename='brew.log',
+                        level=logging.DEBUG,datefmt='%d.%m.%Y %H:%M:%S')
+    logging.debug('Start')
     s=start()
     s.mainLoop()

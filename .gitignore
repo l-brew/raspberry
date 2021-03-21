@@ -133,3 +133,4 @@ dataLogger.pyc
 .idea
 response.html
 /deploy.sh
+synclog.sh

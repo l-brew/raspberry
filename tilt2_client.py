@@ -2,6 +2,8 @@ import threading
 import ScanUtility
 import bluetooth._bluetooth as bluez
 import re
+import time
+import traceback
 
 PERIOD=5
 UUID_REGEX='A495BB..C5B14B44B5121370F02D74DE'
@@ -22,10 +24,14 @@ class Tilt2:
         p=re.compile(UUID_REGEX.lower())
         try:
             sock = bluez.hci_open_dev(self.dev_id)
+
+
+            print(sock)
             print("\n *** Looking for BLE Beacons ***\n")
             print("\n *** CTRL-C to Cancel ***\n")
         except:
             print("Error accessing bluetooth")
+            print(traceback.format_exc())
 
         ScanUtility.hci_enable_le_scan(sock)
         # Scans for iBeacons

@@ -12,7 +12,7 @@ import sys
 import os
 
 import json
-
+import traceback
 PERIOD=5
 
 class Tilt2:    
@@ -63,6 +63,7 @@ class server:
         try:
             os.unlink(self.server_address)
         except OSError:
+            print(traceback.format_exc())
             if os.path.exists(self.server_address):
                 raise
 
@@ -95,6 +96,7 @@ if __name__=="__main__":
         try:
             svr.send(json.dumps(msg))
         except BrokenPipeError:
+            print(traceback.format_exc())
             svr.wait_for_client()
 
     t=Tilt2(scan_complete)

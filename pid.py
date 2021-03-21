@@ -11,6 +11,7 @@ class pid:
         self.frozen=False
 
     def calculate(self,actVal):
+        print("calculate")
         if self.frozen:
             self.ctlSig=self.setPoint
             return self.ctlSig

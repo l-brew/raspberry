@@ -16,65 +16,70 @@ class relay_ctrl():
         self.sensor=sensor
         self.pid=pid
         self.ctlOn=False
+        self.event=threading.Event()
+
+    
 
     def setServer(self,server):
         self.server=server
 
-    def on(self):
-        if self.ctlOn==False:
-            return
-        # perf=timer.perf_counter()
+    def run(self):
+        self.ctlOn=True
+        while True:
+            self.event.clear()
+            while self.ctlOn==False:
+                self.event.wait()
 
-        if(self.pid.getCtlSig()!=0):
-            if self.pid.getCtlSig() > 0 :
-                self.gpio_h.on()
-                self.gpio_c.off()
+            if(self.pid.getCtlSig()!=0):
+                if self.pid.getCtlSig() > 0 :
+                    self.gpio_h.on()
+                    self.gpio_c.off()
+                    self.server.update()
+                else:
+                    self.gpio_h.off()
+                    self.gpio_c.on()
+                    self.server.update()
+                self.onDelay=abs(self.pid.getCtlSig())/100.*self.period
+                self.offDelay=self.period-self.onDelay
+                if (self.onDelay< self.period):
+                    self.event.wait(self.onDelay)
+                else :
+                    self.onDelay=self.period
+                    self.event.wait(self.period)
+                    continue
             else:
                 self.gpio_h.off()
-                self.gpio_c.on()
-            self.onDelay=abs(self.pid.getCtlSig())/100.*self.period
-            self.offDelay=self.period-self.onDelay
-            if (self.onDelay< self.period):
-                self.timer = threading.Timer(self.onDelay, self.off) 
-                self.timer.start()
-            else :
-                self.onDelay=self.period
-                self.timer = threading.Timer(self.period, self.on)
-                self.timer.start()
-        else:
+                self.gpio_c.off()
+                self.server.update()
+                self.event.wait(self.period)
+                continue
+
+            if self.ctlOn==False:
+                return
             self.gpio_h.off()
             self.gpio_c.off()
-            self.timer = threading.Timer(self.period, self.on)
-            self.timer.start()
-        self.server.update()
-
-    def off(self):
-        if self.ctlOn==False:
-            return
-        self.gpio_h.off()
-        self.gpio_c.off()
-        self.timer = threading.Timer(self.offDelay, self.on)
-        self.timer.start()
-        self.server.update()
+            self.server.update()
+            self.event.wait(self.offDelay)
 
         # self.ctlSig
 
 
-    def run(self):
-        if self.ctlOn==False:
-            self.ctlOn=True
-            self.on()
 
     def getPeriod(self):
         return self.period
 
     def setPeriod(self, period):
         self.period=period 
+        self.event.set()
 
 
     def stop(self):
-        self.timer.cancel()
         self.ctlOn=False
+        self.event.set()
+
+    def start(self):
+        self.ctlOn=True
+        self.event.set()
 
     def isRunning(self):
         return self.ctlOn

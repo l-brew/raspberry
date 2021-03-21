@@ -1,5 +1,7 @@
 import time
 import threading
+import traceback
+
 class timer:
 
     def __init__(self):
@@ -24,6 +26,7 @@ class timer:
         try:
             self.timer.cancel()
         except:
+            print(traceback.format_exc())
             pass
         self.isRunning=False
 
