@@ -47,9 +47,7 @@ CNF_IDLE = 0b00000011
 if __name__ == '__main__':
     
     spi = SPI(0, 0)
-    print(spi.msh)
     spi.msh=1000000
-    print(spi.threewire)
     GPIO.setup(CS_PIN,GPIO.OUT)
     GPIO.output(CS_PIN,GPIO.HIGH)
     inter=Interpolate(x,y)
@@ -77,8 +75,4 @@ if __name__ == '__main__':
         GPIO.output(CS_PIN,GPIO.HIGH)
         adc=(msb[0]<<8|lsb[0])>>1
         res=(adc/2**15*400)
-        #print(adc/32 -256)
-        #print(res)
-        print("%.2f°C"%inter(res))
-        #print(flt)
         time.sleep(0.1)

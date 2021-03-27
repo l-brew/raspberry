@@ -54,7 +54,7 @@ class PT100(Sensor):
         self.spi =spidev.SpiDev()
         self.spi.open(0, 0)
         self.spi.mode = 1
-        self.spi.max_speed_hz = 1000000
+        self.spi.max_speed_hz = 100000
         self.spi.no_cs=True
         self.inter=Interpolate(x,y)
         self.cs=LED(8)

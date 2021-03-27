@@ -13,10 +13,14 @@ import sysinfo
 import threading
 from datetime import datetime,timedelta
 import logging
+import comm_layer
+import socket_comm
+
 class start:
 
     def __init__(self):
         pass
+        self.comm=comm_layer.Comm_layer(self)
         self.cfgName = "temp_reg.config"
         self.dataName = "data.csv"
         self.config = configparser.ConfigParser()
@@ -56,18 +60,21 @@ class start:
         self.setPoint=self.pid1.getSetPoint()
 
 
-        self.ctl1 = relay_ctrl(self.pid1,self.t1,self.ctlConfig.get("HeaterPort",16),self.ctlConfig.get("CoolerPort",17),float(self.ctlConfig.get("CtlPeriod","10")))
+        self.ctl1 = relay_ctrl(self.comm,self.pid1,self.t1,self.ctlConfig.get("HeaterPort",16),
+             self.ctlConfig.get("CoolerPort",17),float(self.ctlConfig.get("CtlPeriod","10")))
         
 
         self.tilt = tilt2_client.Tilt2()
         self.tilt.connect()
         
-        print("http start", flush=True)
-        self.http1= http_comm(self)
+        self.http1= http_comm(self.serverConfig,self.comm)
 
-        self.ctl1.setServer(self.http1)
   
         self.http1.run()
+        
+        self.socket_comm = socket_comm.Socket_comm(self.comm)
+        threading.Thread(target=self.socket_comm.run,daemon=True).start()
+        
 
     def writeConfig(self):
         with open(self.cfgName,"w") as cfgFile:
@@ -102,10 +109,9 @@ class start:
         return self.setPoint
 
     def mainLoop(self):
-        print("start main")
         last_time=datetime.today()
         threading.Thread(target=self.ctl1.run).start()
-        ramping=False;
+        ramping=False
         while True:
             delta_t = (datetime.today()-last_time)/timedelta(milliseconds=1)/1000.
             last_time=datetime.today()
@@ -128,16 +134,23 @@ class start:
             self.ntc2.update()
             if self.ctl1.isRunning():
                 self.pid1.calculate(self.t1.getVal())
-            self.http1.update()
+            self.comm.update()
             time.sleep(1)
             # self.fh.write("%s;%2.2f;%2.2f;%2.2f;%3.2f\n"%
            # self.logger.add([round(time.time(),2),
             #round(self.pid1.getCtlSig(),2),round(self.pid1.getCtlSig(),2),round(self.t1.getVal(),2),round(self.t1.getVal(),2)])
 
 
-if __name__=="__main__":
+def main():
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', filename='brew.log',
                         level=logging.DEBUG,datefmt='%d.%m.%Y %H:%M:%S')
     logging.debug('Start')
     s=start()
     s.mainLoop()
+
+if __name__=="__main__":
+    import dbg
+    from os import path
+    if path.exists("/tmp/brewdbg"):
+        dbg.debug()
+    main()

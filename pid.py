@@ -11,12 +11,11 @@ class pid:
         self.frozen=False
 
     def calculate(self,actVal):
-        print("calculate")
         if self.frozen:
             self.ctlSig=self.setPoint
             return self.ctlSig
         # calculate error
-        self.err=self.setPoint-actVal;
+        self.err=self.setPoint-actVal
         # integrate
         self.i_err = self.i_err + self.err
         # saturate integrator
@@ -69,9 +68,6 @@ class pid:
 
     def setI_sat_n (self,i_sat_n ):
         self.i_sat_n =i_sat_n 
-
-    def getSetPoint(self):
-        return self.setPoint
 
     def getCtlSig(self):
         return self.ctlSig

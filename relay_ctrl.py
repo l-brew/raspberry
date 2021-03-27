@@ -5,7 +5,7 @@ import sensor
 
 class relay_ctrl():
 
-    def __init__(self,pid,sensor,gpioH,gpioC,period=10):
+    def __init__(self,comm,pid,sensor,gpioH,gpioC,period=10):
         self.setPoint=50
         self.gpioH=gpioH
         self.gpioC=gpioC
@@ -17,12 +17,9 @@ class relay_ctrl():
         self.pid=pid
         self.ctlOn=False
         self.event=threading.Event()
+        self.comm=comm
 
     
-
-    def setServer(self,server):
-        self.server=server
-
     def run(self):
         self.ctlOn=True
         while True:
@@ -34,11 +31,11 @@ class relay_ctrl():
                 if self.pid.getCtlSig() > 0 :
                     self.gpio_h.on()
                     self.gpio_c.off()
-                    self.server.update()
+                    self.comm.update()
                 else:
                     self.gpio_h.off()
                     self.gpio_c.on()
-                    self.server.update()
+                    self.comm.update()
                 self.onDelay=abs(self.pid.getCtlSig())/100.*self.period
                 self.offDelay=self.period-self.onDelay
                 if (self.onDelay< self.period):
@@ -50,15 +47,13 @@ class relay_ctrl():
             else:
                 self.gpio_h.off()
                 self.gpio_c.off()
-                self.server.update()
+                self.comm.update()
                 self.event.wait(self.period)
                 continue
 
-            if self.ctlOn==False:
-                return
             self.gpio_h.off()
             self.gpio_c.off()
-            self.server.update()
+            self.comm.update()
             self.event.wait(self.offDelay)
 
         # self.ctlSig

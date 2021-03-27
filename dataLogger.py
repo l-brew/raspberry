@@ -12,10 +12,8 @@ class dataLogger:
         self.csvWriter =csv.writer(self.fh,delimiter=';')
 
     def getAll(self):
-        print("start")
         for row in self.data:
             yield row
-        print("end")
         
     def getJson(self):
         json=""
