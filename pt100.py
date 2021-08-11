@@ -91,7 +91,7 @@ class PT100(Sensor):
                     break
                 value = value + adc
         if err:
-            #self.val=None
+            self.val=None
             return
         value = value / 10.
 

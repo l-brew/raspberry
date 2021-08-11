@@ -14,6 +14,9 @@ class Comm_layer:
         if "soll" in cmd.keys():
             self.start.setSetPoint(float(cmd["soll"]))
             writeConfig=True
+        if "set_point" in cmd.keys():
+            self.start.setSetPoint(float(cmd["set_point"]))
+            writeConfig=True
         if "k_p" in cmd.keys():
             self.start.pid1.setK_p(float(cmd["k_p"]))
             writeConfig=True

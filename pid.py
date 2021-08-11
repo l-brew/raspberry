@@ -11,6 +11,8 @@ class pid:
         self.frozen=False
 
     def calculate(self,actVal):
+        if actVal is None:
+            return
         if self.frozen:
             self.ctlSig=self.setPoint
             return self.ctlSig
