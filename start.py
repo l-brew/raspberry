@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from re import S
 import pt100 
 from relay_ctrl import relay_ctrl
 from pid import pid
@@ -15,12 +16,14 @@ from datetime import datetime,timedelta
 import logging
 import comm_layer
 import socket_comm
+from dataset import *
 
 class start:
 
     def __init__(self):
         pass
-        self.comm=comm_layer.Comm_layer(self)
+        self.dataset = Dataset()
+        self.comm=comm_layer.Comm_layer(self,self.dataset)
         self.cfgName = "temp_reg.config"
         self.dataName = "data.csv"
         self.config = configparser.ConfigParser()
@@ -39,7 +42,9 @@ class start:
 
         self.stirrer1 = stirrer(13,26)
 
-        self.t1 = pt100.PT100()
+        #self.t1 = pt100.PT100()
+        from sim_temp import Sim_Temp
+        self.t1 = Sim_Temp()
         self.t1.update()
 
         threading.Thread(target=self.t1.run).start()
@@ -49,7 +54,7 @@ class start:
         self.ntc1 = ntc.Ntc('P9_39',beta=3889)
         self.ntc2 = ntc.Ntc('P9_37')
 
-        self.pid1=pid()
+        self.pid1=pid(self.dataset)
         self.pid1.setSetPoint(float(self.ctlConfig.get("SetPoint","20")))
         self.pid1.setK_p(float(self.ctlConfig.get("K_p","6")))
         self.pid1.setK_i(float(self.ctlConfig.get("K_i","0.01")))
@@ -94,7 +99,7 @@ class start:
         return self.setPoint
 
     def setSetPoint(self,setPoint):
-        self.setPoint=setPoint
+        self.dataset.update('setPoint',setPoint)
 
     def getCtlConfig(self):
         return self.ctlConfig
@@ -151,6 +156,7 @@ def main():
 if __name__=="__main__":
     import dbg
     from os import path
+    #dbg.debug()
     if path.exists("/tmp/brewdbg"):
         dbg.debug()
     main()

@@ -2,7 +2,7 @@ import threading
 import pid
 from gpiozero import LED
 import sensor
-
+relay=0
 class relay_ctrl():
 
     def __init__(self,comm,pid,sensor,gpioH,gpioC,period=10):
@@ -21,6 +21,7 @@ class relay_ctrl():
 
     
     def run(self):
+        global relay
         self.ctlOn=True
         while True:
             self.event.clear()
@@ -29,10 +30,14 @@ class relay_ctrl():
 
             if(self.pid.getCtlSig()!=0):
                 if self.pid.getCtlSig() > 0 :
+                   
+                    relay=1
                     self.gpio_h.on()
                     self.gpio_c.off()
                     self.comm.update()
                 else:
+                    
+                    relay=0
                     self.gpio_h.off()
                     self.gpio_c.on()
                     self.comm.update()
@@ -45,12 +50,15 @@ class relay_ctrl():
                     self.event.wait(self.period)
                     continue
             else:
+                relay=0
                 self.gpio_h.off()
                 self.gpio_c.off()
                 self.comm.update()
                 self.event.wait(self.period)
                 continue
 
+           
+            relay=0
             self.gpio_h.off()
             self.gpio_c.off()
             self.comm.update()
@@ -86,9 +94,13 @@ class relay_ctrl():
         self.gpio_c.off()
 
     def heaterOn(self):
+        global relay
+        relay=1
         self.gpio_h.on()
 
     def heaterOff(self):
+        global relay
+        relay=0
         self.gpio_h.off()
 
     def allOff(self):
