@@ -7,7 +7,7 @@ from http_comm import http_comm
 import configparser
 from dataLogger import dataLogger
 from stirrer import stirrer
-import tilt2_client
+import tilt2_bleak as tilt2
 import ntc
 import sysinfo
 import threading
@@ -15,6 +15,7 @@ from datetime import datetime,timedelta
 import logging
 import comm_layer
 import socket_comm
+import two_point_control
 
 class start:
 
@@ -48,23 +49,32 @@ class start:
 
         self.ntc1 = ntc.Ntc('P9_39',beta=3889)
         self.ntc2 = ntc.Ntc('P9_37')
-
-        self.pid1=pid()
-        self.pid1.setSetPoint(float(self.ctlConfig.get("SetPoint","20")))
-        self.pid1.setK_p(float(self.ctlConfig.get("K_p","6")))
-        self.pid1.setK_i(float(self.ctlConfig.get("K_i","0.01")))
-        self.pid1.setI_sat_p(float(self.ctlConfig.get("I_sat_p","60")))
-        self.pid1.setI_sat_n(float(self.ctlConfig.get("I_sat_n","-60")))
+        controller_type = self.ctlConfig.get("type","pid")
+        if controller_type  == "pid":
+            self.pid1=pid()
+            self.pid1.setSetPoint(float(self.ctlConfig.get("SetPoint","20")))
+            self.pid1.setK_p(float(self.ctlConfig.get("K_p","6")))
+            self.pid1.setK_i(float(self.ctlConfig.get("K_i","0.01")))
+            self.pid1.setI_sat_p(float(self.ctlConfig.get("I_sat_p","60")))
+            self.pid1.setI_sat_n(float(self.ctlConfig.get("I_sat_n","-60")))
+        elif controller_type == "twopoint":
+            self.pid1=two_point_control.Two_point(
+                  setPoint   = float(self.ctlConfig.get("SetPoint","20"))
+                , dead_time  = float(self.ctlConfig.get("dead_time","600"))
+                , hysteresis = float(self.ctlConfig.get("hysteresis","1"))
+            )
+        else:
+            raise Exception("Wrong controller Type: "+str(self.ctlConfig.get("type")) )
 
         self.ramp=float(self.ctlConfig.get("Ramp","0"))
         self.setPoint=self.pid1.getSetPoint()
 
 
         self.ctl1 = relay_ctrl(self.comm,self.pid1,self.t1,self.ctlConfig.get("HeaterPort",16),
-             self.ctlConfig.get("CoolerPort",17),float(self.ctlConfig.get("CtlPeriod","10")))
+             self.ctlConfig.get("CoolerPort",17),float(self.ctlConfig.get("CtlPeriod","3600")))
         
 
-        self.tilt = tilt2_client.Tilt2()
+        self.tilt = tilt2.Tilt2()
         self.tilt.connect()
         
         self.http1= http_comm(self.serverConfig,self.comm)

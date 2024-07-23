@@ -24,7 +24,7 @@ class pid:
         if self.i_err * self.k_i > self.i_sat_p :
             self.i_err = self.i_sat_p/self.k_i
         elif self.i_err * self.k_i< self.i_sat_n :
-            self.i_err = -self.i_sat_n / self.k_i
+            self.i_err = self.i_sat_n / self.k_i
 
         self.ctlSig=self.err*self.k_p + self.i_err * self.k_i
         return self.ctlSig
