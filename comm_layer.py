@@ -6,6 +6,13 @@ class Comm_layer:
         self.start=start
         pass
 
+    def convert(self,a):
+        if isinstance(a,float) and a != float("-inf") and a!= float("inf") and a == a:
+            return a 
+        else:
+            return 0
+            
+
     def command(self,cmd):
         writeConfig=False
         if "ramp" in cmd.keys():
@@ -112,26 +119,26 @@ class Comm_layer:
 
         data = {
             'time': time.strftime('%Y-%m-%d %H:%M:%S',time.localtime()),
-            'temp': self.start.t1.getVal(),
-            'set_point': self.start.pid1.getSetPoint(),
-            'k_i': self.start.pid1.getK_i(),
-            'k_p': self.start.pid1.getK_p(),
-            'actuating_value' : self.start.pid1.getCtlSig(),
-            'err' :self.start.pid1.getErr()*self.start.pid1.getK_p(),
-            'i_err' : self.start.pid1.getI_err()*self.start.pid1.getK_i(),
+            'temp': self.convert(self.start.t1.getVal()),
+            'set_point': self.convert(self.start.pid1.getSetPoint()),
+            'k_i': self.convert(self.start.pid1.getK_i()),
+            'k_p': self.convert(self.start.pid1.getK_p()),
+            'actuating_value' : self.convert(self.start.pid1.getCtlSig()),
+            'err' :self.convert(self.start.pid1.getErr()*self.start.pid1.getK_p()),
+            'i_err' : self.convert(self.start.pid1.getI_err()*self.start.pid1.getK_i()),
             'heater' :self.start.ctl1.heaterIsOn(),
             'cooler' :self.start.ctl1.coolerIsOn(),
             'stirrer' :self.start.stirrer1.isRunning(),
-            'power' :power,
+            'power' :self.convert(power),
             'reg' :self.start.ctl1.isRunning(),
-            'ramp' :self.start.getRamp(),
-            'target' :self.start.getTarget(),
-            'period' :self.start.ctl1.getPeriod(),
+            'ramp' :self.convert(self.start.getRamp()),
+            'target' :self.convert(self.start.getTarget()),
+            'period' :self.convert(self.start.ctl1.getPeriod()),
             'frozen' :self.start.pid1.getFrozen(),
-            'tilt_temp' : self.start.tilt.temp,
-            'tilt_grav' : self.start.tilt.grav,
-            'ntc1':self.start.sysinfo.get_cpu_temp(),
-            'ntc2': self.start.ntc2.getVal()
+            'tilt_temp' : self.convert(self.start.tilt.temp),
+            'tilt_grav' : self.convert(self.start.tilt.grav),
+            'ntc1':self.convert(self.start.sysinfo.get_cpu_temp()),
+            'ntc2': self.convert(self.start.ntc2.getVal())
                 }
 
         return data

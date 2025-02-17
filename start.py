@@ -161,6 +161,6 @@ def main():
 if __name__=="__main__":
     import dbg
     from os import path
-    if path.exists("/tmp/brewdbg"):
+    if path.exists("/tmp/brewdbg"): 
         dbg.debug()
     main()

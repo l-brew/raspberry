@@ -34,7 +34,7 @@ class http_comm:
                 conn.request("GET", "/brewserver/commands/listen/")
                 r1 = conn.getresponse()
                 response=r1.read()
-                if response is b'':
+                if response == b'':
                     continue
                 form = json.loads(response.decode('utf-8'))
                 logging.info("COMMAND:%s"%str(form))

@@ -1,20 +1,12 @@
 import asyncio
 from uuid import UUID
 
-
+import time
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 import re
 import threading
-
-# ibeacon_format = Struct(
-#     "type_length" / Const(b"\x02\x15"),
-#     "uuid" / Array(16, Byte),
-#     "major" / Int16ub,
-#     "minor" / Int16ub,
-#     "power" / Int8sl,
-# )
 
 UUID_REGEX='A495BB..C5B14B44B5121370F02D74DE'
 
@@ -24,7 +16,18 @@ class Tilt2:
         self.grav = None
         self.dev_id = 0
         self.p=re.compile(UUID_REGEX.lower())
+        self.new_value = False
         pass
+
+
+    def monitoring_thread_fnc(self):
+        while True:
+            if not self.new_value:
+                self.grav = None
+                self.tilt = None
+            self.new_value = False
+            time.sleep(60)
+
 
     def device_found(self,
         device: BLEDevice, advertisement_data: AdvertisementData
@@ -45,6 +48,7 @@ class Tilt2:
             t_f = major
             self.grav = 135.997 * (sg ** 3) - 630.272 * (sg ** 2) + 1111.14 * sg - 616.868
             self.temp = (t_f - 32) * 5 / 9.
+            self.new_value = True
 
         except Exception as e:
             pass
@@ -57,17 +61,27 @@ class Tilt2:
         scanner.register_detection_callback(self.device_found)
 
         while True:
-            await scanner.start()
-            await asyncio.sleep(1.0)
-            await scanner.stop()
+            try:
+                await scanner.start()
+                break
+                #await scanner.stop()
+            except Exception as e:
+                    print(e)
+            await asyncio.sleep(1)
+        while True:
+            await asyncio.sleep(100)
+
+
 
     def loop_thread_fnc(self):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(tilt.mainloop())
+        loop.run_until_complete(self.mainloop())
     
     def connect(self):
         threading.Thread(target=self.loop_thread_fnc,daemon=True).start()
+        threading.Thread(target=self.monitoring_thread_fnc,daemon=True).start()
+        
 
 
 if __name__ == "__main__":

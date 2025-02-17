@@ -93,7 +93,7 @@ class Connection:
                 self.conn_closed_callback(self.socket)
                 break
 
-            
+
 
 class Packet:
     def __init__(self,data):

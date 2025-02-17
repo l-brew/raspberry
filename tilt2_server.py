@@ -1,108 +1,108 @@
-import time
-import threading
+# import time
+# import threading
 
-from beacontools import BeaconScanner, IBeaconFilter, IBeaconAdvertisement
+# from beacontools import BeaconScanner, IBeaconFilter, IBeaconAdvertisement
 
-from bleak import discover
-import asyncio
-
-
-import socket
-import sys
-import os
-
-import json
-import traceback
-PERIOD=5
-
-class Tilt2:    
-    def __init__(self,scan_complete=None,period=PERIOD):
-        self.scanner = None
-        self.grav_p = None
-        self.temp_c = None
-        self.period=PERIOD
-        self.scan_complete=None
-
-    def start(self):
-
-        def callback(bt_addr, rssi, packet, additional_info):
-            self.scanner._mon.toggle_scan(False)
-            sg=additional_info['minor']/1000
-            t_f=additional_info['major']
-            self.grav_p=135.997*(sg**3) - 630.272 * (sg**2) + 1111.14 * sg - 616.868
-            self.temp_c= (t_f - 32 ) * 5/9. 
-            if self.scan_complete:
-                self.scan_complete(self)
+# from bleak import discover
+# import asyncio
 
 
-        self.scanner = BeaconScanner(callback,
-                    packet_filter=IBeaconAdvertisement
-                    )
+# import socket
+# import sys
+# import os
 
-        async def run():
-            devices = await discover()
+# import json
+# import traceback
+# PERIOD=5
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(run())
+# class Tilt2:    
+#     def __init__(self,scan_complete=None,period=PERIOD):
+#         self.scanner = None
+#         self.grav_p = None
+#         self.temp_c = None
+#         self.period=PERIOD
+#         self.scan_complete=None
+
+#     def start(self):
+
+#         def callback(bt_addr, rssi, packet, additional_info):
+#             self.scanner._mon.toggle_scan(False)
+#             sg=additional_info['minor']/1000 
+#             t_f=additional_info['major']
+#             self.grav_p=135.997*(sg**3) - 630.272 * (sg**2) + 1111.14 * sg - 616.868
+#             self.temp_c= (t_f - 32 ) * 5/9. 
+#             if self.scan_complete:
+#                 self.scan_complete(self)
 
 
-        self.scanner.start()
+#         self.scanner = BeaconScanner(callback,
+#                     packet_filter=IBeaconAdvertisement
+#                     )
 
-        def _run():
-            while True:
-                time.sleep(self.period)
-                self.scanner._mon.toggle_scan(True)
+#         async def run():
+#             devices = await discover()
 
-        threading.Thread(target=_run).start()
+#         loop = asyncio.get_event_loop()
+#         loop.run_until_complete(run())
 
-class server:
-    def __init__(self,server_address="/tmp/tilt2_socket"):
-        self.server_address = server_address
+
+#         self.scanner.start()
+
+#         def _run():
+#             while True:
+#                 time.sleep(self.period)
+#                 self.scanner._mon.toggle_scan(True)
+
+#         threading.Thread(target=_run).start()
+
+# class server:
+#     def __init__(self,server_address="/tmp/tilt2_socket"):
+#         self.server_address = server_address
         
-    def open_socket(self):
-        try:
-            os.unlink(self.server_address)
-        except OSError:
-            print(traceback.format_exc())
-            if os.path.exists(self.server_address):
-                raise
+#     def open_socket(self):
+#         try:
+#             os.unlink(self.server_address)
+#         except OSError:
+#             print(traceback.format_exc())
+#             if os.path.exists(self.server_address):
+#                 raise
 
 
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+#         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
-        # Bind the socket to the port
-        self.sock.bind(self.server_address)
-        os.chmod(self.server_address, 0o777)
-        self.sock.listen(1)
-        print("opened socket to %s" % self.server_address)
+#         # Bind the socket to the port
+#         self.sock.bind(self.server_address)
+#         os.chmod(self.server_address, 0o777)
+#         self.sock.listen(1)
+#         print("opened socket to %s" % self.server_address)
 
-    def wait_for_client(self):
-        self.connection, self.client_address = self.sock.accept()
+#     def wait_for_client(self):
+#         self.connection, self.client_address = self.sock.accept()
 
-    def send(self,message):
-            self.connection.sendall(bytes(message,'utf-8'))
+#     def send(self,message):
+#             self.connection.sendall(bytes(message,'utf-8'))
 
 
 
-if __name__=="__main__":
-    svr=server()
+# if __name__=="__main__":
+#     svr=server()
 
-    svr.open_socket()
-    print("wait for client")
-    svr.wait_for_client()
+#     svr.open_socket()
+#     print("wait for client")
+#     svr.wait_for_client()
 
-    def scan_complete(t):
-        msg={"tmp":t.temp_c or float("inf") , "grav":t.grav_p or float("inf") }
-        try:
-            svr.send(json.dumps(msg))
-        except BrokenPipeError:
-            print(traceback.format_exc())
-            svr.wait_for_client()
+#     def scan_complete(t):
+#         msg={"tmp":t.temp_c or float("inf") , "grav":t.grav_p or float("inf") }
+#         try:
+#             svr.send(json.dumps(msg))
+#         except BrokenPipeError:
+#             print(traceback.format_exc())
+#             svr.wait_for_client()
 
-    t=Tilt2(scan_complete)
-    t.start()
+#     t=Tilt2(scan_complete)
+#     t.start()
 
-    # while True:
-        # time.sleep(PERIOD)
+#     # while True:
+#         # time.sleep(PERIOD)
 
 

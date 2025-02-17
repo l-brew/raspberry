@@ -2,10 +2,11 @@ import threading
 import pid
 from gpiozero import LED
 import sensor
+import datetime
 
 class relay_ctrl():
 
-    def __init__(self,comm,pid,sensor,gpioH,gpioC,period=10):
+    def __init__(self,comm,pid,sensor,gpioH,gpioC,period=3600):
         self.setPoint=50
         self.gpioH=gpioH
         self.gpioC=gpioC

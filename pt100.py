@@ -83,29 +83,38 @@ class PT100(Sensor):
 
 
     def update(self):
-        value=0
-        err=False
-        for i in range(10):
-                err,adc = self.spi_read()
-                if err:
-                    break
-                value = value + adc
-        if err:
-            self.val=None
-            return
-        value = value / 10.
+        try:
+            value=0
+            err=False
+            for i in range(10):
+                    err,adc = self.spi_read()
+                    if err:
+                        break
+                    value = value + adc
+            if err:
+                self.val=None
+                return
+            value = value / 10.
 
-        res=(value/2**15*400)
-        self.tempList.append(self.inter(res))
-        if len(self.tempList)> 5:
-            del self.tempList[0]
-        tSum=0
-        for t in self.tempList:
-            tSum=tSum+t
-        self.val= tSum/len(self.tempList)
-        time.sleep(0.1)
+            res=(value/2**15*400)
+            self.tempList.append(self.inter(res))
+            if len(self.tempList)> 5:
+                del self.tempList[0]
+            tSum=0
+            for t in self.tempList:
+                tSum=tSum+t
+            self.val= tSum/len(self.tempList)
+            time.sleep(0.1)
+        except:
+            self.val = float("-inf")
 
     def run(self):
         while True:
-            self.update()
-            time.sleep(0.1)
+            try:
+                self.update()
+                time.sleep(0.1)
+            except KeyboardInterrupt:
+                self.spi.close()
+            except :
+                self.spi.close()
+            
