@@ -29,6 +29,35 @@ class socket_comm {
     + receive()
 }
 
+' Web Interface
+package "Web Interface" {
+    class FlaskApp {
+        - comm_layer
+        + __init__(comm_layer)
+        + run()
+        + index()
+        + dashboard()
+        + api_status()
+        + api_command()
+    }
+    class WebModule {
+        - comm_layer
+        + __init__(comm_layer)
+        + get_system_status()
+        + send_command(cmd)
+        + format_data_for_display()
+    }
+}
+
+' Web Templates & Static Files
+package "Templates & Static" {
+    class "dashboard.html" as DashboardTemplate
+    class "index.html" as IndexTemplate
+    class "bootstrap.min.css" as BootstrapCSS
+    class "custom.css" as CustomCSS
+    class "brewing.js" as BrewingJS
+}
+
 ' Sensors & Actuators
 class Sensor {
     + read()
@@ -129,7 +158,22 @@ NTC --|> Sensor
 DummySensor --|> Sensor
 Tilt2Server --> Tilt2Client : aggregates
 
-' Note: start.py is the entry point, not a class
+' Web Interface Relationships
+FlaskApp --> WebModule : uses
+WebModule --> Comm_layer : uses
+FlaskApp --> DashboardTemplate : renders
+FlaskApp --> IndexTemplate : renders
+DashboardTemplate ..> BootstrapCSS : styles
+DashboardTemplate ..> CustomCSS : styles
+DashboardTemplate ..> BrewingJS : uses
+IndexTemplate ..> BootstrapCSS : styles
+IndexTemplate ..> CustomCSS : styles
+
+' ' Browser interaction
+' actor Browser
+' Browser --> FlaskApp : HTTP requests
+
+' ' Note: start.py is the entry point, not a class
 
 ' Utilities
 class sysinfo <<utility>>

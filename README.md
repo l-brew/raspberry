@@ -9,6 +9,7 @@
   - [Sensors & Actuators](#sensors--actuators)
   - [Utilities & Support](#utilities--support)
   - [Testing & Debugging](#testing--debugging)
+  - [Web Interface](#web-interface)
 - [Extending the System](#extending-the-system)
 - [Example Usage](#example-usage)
 - [File Structure](#file-structure)
@@ -31,6 +32,7 @@ The system is organized into the following layers:
 - **Sensors & Actuators:** Provides drivers and interfaces for temperature sensors, relays, stirrers, and other hardware.
 - **Utilities & Support:** Includes PID control, system information, timers, and scanning utilities.
 - **Testing & Debugging:** Contains modules for debugging, testing, and data logging.
+- **Web Interface:** Provides a Flask-based web dashboard for real-time monitoring and control via browser.
 
 ![UML Class Diagram](docs/brewing_control_system_uml.svg)
 
@@ -216,12 +218,35 @@ The system is organized into the following layers:
 
 ---
 
+### Web Interface
+
+#### `web/comm_layer_web.py`
+- **Functionality:** Flask web server providing a dashboard for real-time monitoring and control.
+  - **Endpoints:**
+    - `/` : Main dashboard (HTML)
+    - `/status` : JSON status (for AJAX updates)
+    - `/set` : POST endpoint to set a parameter
+    - `/rampup2` : POST endpoint for ramp-up command
+  - **Integration:** Uses `Comm_layer` for backend logic.
+
+#### `web/templates/dashboard.html`
+- **Functionality:** Jinja2 HTML template for the dashboard UI.
+
+#### `web/static/css/bootstrap.min.css`
+- **Functionality:** Local Bootstrap CSS for styling the web interface.
+
+#### `web/README.md`
+- **Functionality:** Documentation for the web interface module.
+
+---
+
 ## Extending the System
 
 - **Add new sensors:** Implement a new class in `sensor.py` and register it in `comm_layer.py`.
 - **Add new actuators:** Extend `relay_ctrl.py` or create a new actuator module.
 - **Add new control logic:** Implement new controllers in `pid.py` or `two_point_control.py`.
 - **Integrate new communication protocols:** Add modules similar to `http_comm.py` or `socket_comm.py`.
+- **Add web features:** Extend `web/comm_layer_web.py` and `dashboard.html` for new controls or visualizations.
 
 ---
 
@@ -244,6 +269,11 @@ server_config = {
 # Initialize HTTP communication
 http = http_comm(server_config, comm_layer)
 http.run()
+
+# Start web interface (optional)
+from web.comm_layer_web import create_app
+app = create_app(comm_layer)
+app.run(host='0.0.0.0', port=8080)
 ```
 
 ---
@@ -275,5 +305,15 @@ http.run()
 ├── tilt2_bleak.py
 ├── tilt2_server.py
 ├── timer.py
-└── doc.md
+├── doc.md
+├── web/
+│   ├── comm_layer_web.py
+│   ├── templates/
+│   │   └── dashboard.html
+│   ├── static/
+│   │   └── css/
+│   │       └── bootstrap.min.css
+│   └── README.md
+└── docs/
+    └── brewing_control_system_uml.svg
 ```
