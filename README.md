@@ -1,4 +1,4 @@
-# Brewing Control System - Comprehensive Project Documentation
+# Brewing Control System 
 
 ## Table of Contents
 
