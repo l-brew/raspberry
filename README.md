@@ -34,7 +34,6 @@ The system is organized into the following layers:
 - **Testing & Debugging:** Contains modules for debugging, testing, and data logging.
 - **Web Interface:** Provides a Flask-based web dashboard for real-time monitoring and control via browser.
 
-![UML Class Diagram](docs/brewing_control_system_uml.svg)
 
 <!-- Rest of your overview content -->
 ---
