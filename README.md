@@ -32,6 +32,9 @@ The system is organized into the following layers:
 - **Utilities & Support:** Includes PID control, system information, timers, and scanning utilities.
 - **Testing & Debugging:** Contains modules for debugging, testing, and data logging.
 
+![UML Class Diagram](docs/brewing_control_system_uml.svg)
+
+<!-- Rest of your overview content -->
 ---
 
 ## Module Descriptions
