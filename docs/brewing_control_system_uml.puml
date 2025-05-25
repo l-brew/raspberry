@@ -1,0 +1,138 @@
+@startuml
+' Core Control & Communication
+class Comm_layer {
+    - start
+    + __init__(start)
+    + command(form: dict)
+    + get_status_dict()
+    + update()
+}
+class http_comm {
+    - server_config
+    - comm
+    - ssl_context
+    - lock
+    + __init__(server_config, comm)
+    + run()
+    + update()
+    + listenToServer()
+    + fullStatus()
+    + escape(s)
+}
+class socket_comm {
+    - host
+    - port
+    - comm_layer
+    + __init__(host, port, comm_layer)
+    + run()
+    + send(data)
+    + receive()
+}
+
+' Sensors & Actuators
+class Sensor {
+    + read()
+}
+class PT100 {
+    - channel
+    - calibration
+    + __init__(channel, calibration)
+    + read_temperature()
+}
+class PT100_2 {
+    - channel
+    - calibration
+    + __init__(channel, calibration)
+    + read_temperature()
+}
+class NTC {
+    - pin
+    - beta
+    - r0
+    + __init__(pin, beta, r0)
+    + read_temperature()
+}
+class DummySensor {
+    + read()
+}
+class RelayCtrl {
+    - relay_pins
+    + __init__(relay_pins)
+    + set_state(relay, state)
+    + get_state(relay)
+}
+class Stirrer {
+    - pin
+    - speed
+    + __init__(pin)
+    + set_speed(speed)
+    + start()
+    + stop()
+}
+
+' Utilities & Support
+class PID {
+    - kp
+    - ki
+    - kd
+    - setpoint
+    - output_limits
+    + __init__(kp, ki, kd, setpoint, output_limits)
+    + compute(measurement)
+    + reset()
+}
+class TwoPointControl {
+    - setpoint
+    - hysteresis
+    + __init__(setpoint, hysteresis)
+    + compute(measurement)
+}
+class Timer {
+    + start()
+    + stop()
+    + elapsed()
+}
+class ScanUtility {
+    + scan_devices()
+    + scan_network()
+}
+class DataLogger {
+    - filename
+    - buffer
+    + __init__(filename)
+    + log(data)
+    + flush()
+}
+
+' Tilt Hydrometer Integration
+class Tilt2Client {
+    + scan()
+    + get_reading()
+}
+class Tilt2Server {
+    + start_server()
+    + handle_request()
+}
+
+' Relationships
+Comm_layer --> Sensor : uses
+Comm_layer --> RelayCtrl : controls
+Comm_layer --> Stirrer : controls
+Comm_layer --> PID : uses
+Comm_layer --> TwoPointControl : uses
+Comm_layer --> DataLogger : logs to
+http_comm --> Comm_layer : communicates
+socket_comm --> Comm_layer : communicates
+PT100 --|> Sensor
+PT100_2 --|> Sensor
+NTC --|> Sensor
+DummySensor --|> Sensor
+Tilt2Server --> Tilt2Client : aggregates
+
+' Note: start.py is the entry point, not a class
+
+' Utilities
+class sysinfo <<utility>>
+class dbg <<utility>>
+
+@enduml
