@@ -277,20 +277,3 @@ http.run()
 ├── timer.py
 └── doc.md
 ```
-
----
-
-## License
-
-[Specify your license here]
-
----
-
-## Contact
-
-For questions or contributions, please contact [your-email@example.com].
-
----
-
-**Note:**  
-Descriptions are based on standard conventions and inferred from file/module names. For precise details, refer to the actual code or update this documentation as needed.
