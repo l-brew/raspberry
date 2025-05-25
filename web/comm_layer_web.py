@@ -12,7 +12,7 @@ def create_app(comm_layer):
     This function creates a Flask app with routes for monitoring and controlling
     the brewing process through a web interface.
     
-    :param comm_layer: An instance of Comm_layer that provides brewing control logic
+    :param comm_layer: An instance of Comm_layer that provides brewing control logic<
                       and communication with the brewing hardware.
     :return: Configured Flask application instance.
     """

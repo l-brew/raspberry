@@ -1,6 +1,6 @@
 @startuml
 ' Core Control & Communication
-class Comm_layer {
+class "terminal/comm_layer_terminal.py" as CommLayerTerminal {
     - start
     + __init__(start)
     + command(form: dict)
@@ -22,8 +22,8 @@ class http_comm {
 class socket_comm {
     - host
     - port
-    - comm_layer
-    + __init__(host, port, comm_layer)
+    - comm_layer_terminal
+    + __init__(host, port, comm_layer_terminal)
     + run()
     + send(data)
     + receive()
@@ -32,8 +32,8 @@ class socket_comm {
 ' Web Interface
 package "Web Interface" {
     class FlaskApp {
-        - comm_layer
-        + __init__(comm_layer)
+        - comm_layer_terminal
+        + __init__(comm_layer_terminal)
         + run()
         + index()
         + dashboard()
@@ -41,11 +41,17 @@ package "Web Interface" {
         + api_command()
     }
     class WebModule {
-        - comm_layer
-        + __init__(comm_layer)
+        - comm_layer_terminal
+        + __init__(comm_layer_terminal)
         + get_system_status()
         + send_command(cmd)
         + format_data_for_display()
+    }
+    class "web/comm_layer_web.py" as CommLayerWeb {
+        - comm_layer_terminal
+        + __init__(comm_layer_terminal)
+        + get_system_status()
+        + send_command(cmd)
     }
 }
 
@@ -144,14 +150,14 @@ class Tilt2Server {
 }
 
 ' Relationships
-Comm_layer --> Sensor : uses
-Comm_layer --> RelayCtrl : controls
-Comm_layer --> Stirrer : controls
-Comm_layer --> PID : uses
-Comm_layer --> TwoPointControl : uses
-Comm_layer --> DataLogger : logs to
-http_comm --> Comm_layer : communicates
-socket_comm --> Comm_layer : communicates
+CommLayerTerminal --> Sensor : uses
+CommLayerTerminal --> RelayCtrl : controls
+CommLayerTerminal --> Stirrer : controls
+CommLayerTerminal --> PID : uses
+CommLayerTerminal --> TwoPointControl : uses
+CommLayerTerminal --> DataLogger : logs to
+http_comm --> CommLayerTerminal : communicates
+socket_comm --> CommLayerTerminal : communicates
 PT100 --|> Sensor
 PT100_2 --|> Sensor
 NTC --|> Sensor
@@ -160,7 +166,8 @@ Tilt2Server --> Tilt2Client : aggregates
 
 ' Web Interface Relationships
 FlaskApp --> WebModule : uses
-WebModule --> Comm_layer : uses
+WebModule --> CommLayerTerminal : uses
+CommLayerWeb --> CommLayerTerminal : interacts
 FlaskApp --> DashboardTemplate : renders
 FlaskApp --> IndexTemplate : renders
 DashboardTemplate ..> BootstrapCSS : styles

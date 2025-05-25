@@ -43,15 +43,17 @@ The system is organized into the following layers:
 
 ### Core Control & Communication
 
-#### `comm_layer.py`
-- **Class: Comm_layer**
-  - Central interface to hardware and control logic.
+#### `terminal/comm_layer_terminal.py`
+- **Class: CommLayerTerminal**
+  - Provides a terminal-based interface for interacting with the brewing control system.
   - **Attributes:** `start` (hardware/control logic reference)
   - **Methods:**
     - `__init__(start)`
-    - `command(form: dict)`
-    - `get_status_dict()`
-    - `update()`
+    - `run()`
+    - `handle_command(command: str)`
+    - `get_status()`
+  - **Description:**  
+    Allows users to monitor and control the brewing system directly from the terminal, useful for headless setups or debugging without a web interface.
 
 #### `http_comm.py`
 - **Class: http_comm**
@@ -242,7 +244,7 @@ The system is organized into the following layers:
 
 ## Extending the System
 
-- **Add new sensors:** Implement a new class in `sensor.py` and register it in `comm_layer.py`.
+- **Add new sensors:** Implement a new class in `sensor.py` and register it in the appropriate communication layer.
 - **Add new actuators:** Extend `relay_ctrl.py` or create a new actuator module.
 - **Add new control logic:** Implement new controllers in `pid.py` or `two_point_control.py`.
 - **Integrate new communication protocols:** Add modules similar to `http_comm.py` or `socket_comm.py`.
@@ -253,13 +255,16 @@ The system is organized into the following layers:
 ## Example Usage
 
 ```python
-from comm_layer import Comm_layer
 from http_comm import http_comm
 from start import initialize_system
 
 # Initialize hardware and control logic
 start = initialize_system()
-comm_layer = Comm_layer(start)
+
+# Example: Using the terminal interface
+from terminal.comm_layer_terminal import CommLayerTerminal
+terminal_interface = CommLayerTerminal(start)
+terminal_interface.run()
 
 # Server configuration
 server_config = {
@@ -267,12 +272,12 @@ server_config = {
 }
 
 # Initialize HTTP communication
-http = http_comm(server_config, comm_layer)
+http = http_comm(server_config, terminal_interface)
 http.run()
 
 # Start web interface (optional)
 from web.comm_layer_web import create_app
-app = create_app(comm_layer)
+app = create_app(terminal_interface)
 app.run(host='0.0.0.0', port=8080)
 ```
 
@@ -282,7 +287,6 @@ app.run(host='0.0.0.0', port=8080)
 
 ```
 .
-├── comm_layer.py
 ├── dbg.py
 ├── http_comm.py
 ├── pid.py
@@ -306,6 +310,8 @@ app.run(host='0.0.0.0', port=8080)
 ├── tilt2_server.py
 ├── timer.py
 ├── doc.md
+├── terminal/
+│   └── comm_layer_terminal.py
 ├── web/
 │   ├── comm_layer_web.py
 │   ├── templates/
