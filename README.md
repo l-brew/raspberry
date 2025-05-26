@@ -1,22 +1,50 @@
 # Brewing Control System 
 
 ## Table of Contents
+- [Brewing Control System](#brewing-control-system)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Architecture](#architecture)
+  - [Module Descriptions](#module-descriptions)
+    - [Core Control \& Communication](#core-control--communication)
+      - [`terminal/comm_layer_terminal.py`](#terminalcomm_layer_terminalpy)
+      - [`http_comm.py`](#http_commpy)
+      - [`socket_comm.py`](#socket_commpy)
+      - [`start.py`](#startpy)
+    - [Sensors \& Actuators](#sensors--actuators)
+      - [`pt100.py`, `pt100_2.py`](#pt100py-pt100_2py)
+      - [`ntc.py`](#ntcpy)
+      - [`sensor.py`](#sensorpy)
+      - [`dummySensor.py`](#dummysensorpy)
+      - [`relay_ctrl.py`](#relay_ctrlpy)
+      - [`stirrer.py`](#stirrerpy)
+    - [Controllers](#controllers)
+      - [`pid.py`](#pidpy)
+      - [`two_point_control.py`](#two_point_controlpy)
+    - [Utilities \& Support](#utilities--support)
+      - [`timer.py`](#timerpy)
+      - [`sysinfo.py`](#sysinfopy)
+      - [`ScanUtility.py`](#scanutilitypy)
+    - [Tilt Hydrometer Integration](#tilt-hydrometer-integration)
+      - [`tilt2_client.py`](#tilt2_clientpy)
+      - [`tilt2_server.py`](#tilt2_serverpy)
+      - [`tilt2_bleak.py`](#tilt2_bleakpy)
+      - [`tilt2_test.py`](#tilt2_testpy)
+    - [Data Logging](#data-logging)
+      - [`dataLogger.py`](#dataloggerpy)
+      - [`testDataLogger.py`](#testdataloggerpy)
+    - [Testing \& Debugging](#testing--debugging)
+      - [`dbg.py`](#dbgpy)
+    - [Web Interface](#web-interface)
+      - [`web/comm_layer_web.py`](#webcomm_layer_webpy)
+      - [`web/templates/dashboard.html`](#webtemplatesdashboardhtml)
+      - [`web/static/css/bootstrap.min.css`](#webstaticcssbootstrapmincss)
+      - [`web/README.md`](#webreadmemd)
+  - [Extending the System](#extending-the-system)
+  - [Running the System](#running-the-system)
+  - [Configuration](#configuration)
+  - [UML](#uml)
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Module Descriptions](#module-descriptions)
-  - [Core Control & Communication](#core-control--communication)
-  - [Sensors & Actuators](#sensors--actuators)
-  - [Utilities & Support](#utilities--support)
-  - [Testing & Debugging](#testing--debugging)
-  - [Web Interface](#web-interface)
-- [Extending the System](#extending-the-system)
-- [Example Usage](#example-usage)
-- [File Structure](#file-structure)
-- [License](#license)
-- [Contact](#contact)
-
----
 
 ## Overview
 
@@ -29,11 +57,11 @@ This project is a modular, extensible brewing control system that runs on a rasp
 The system is organized into the following layers:
 
 - **Core Control & Communication:** Handles the main control logic, server communication, and socket interfaces.
+- **Controllers:** Implements PID and two-point control algorithms for temperature regulation.
 - **Sensors & Actuators:** Provides drivers and interfaces for temperature sensors, relays, stirrers, and other hardware.
-- **Utilities & Support:** Includes PID control, system information, timers, and scanning utilities.
+- **Utilities & Support:** Includes system information, timers, and scanning utilities.
 - **Testing & Debugging:** Contains modules for debugging, testing, and data logging.
 - **Web Interface:** Provides a Flask-based web dashboard for real-time monitoring and control via browser.
-
 
 <!-- Rest of your overview content -->
 ---
@@ -133,7 +161,7 @@ The system is organized into the following layers:
 
 ---
 
-### Utilities & Support
+### Controllers
 
 #### `pid.py`
 - **Class: PID**
@@ -151,6 +179,8 @@ The system is organized into the following layers:
   - **Methods:**
     - `__init__(setpoint, hysteresis)`
     - `compute(measurement)`
+
+### Utilities & Support
 
 #### `timer.py`
 - **Class: Timer**
@@ -251,74 +281,46 @@ The system is organized into the following layers:
 
 ---
 
-## Example Usage
+## Running the System
 
-```python
-from http_comm import http_comm
-from start import initialize_system
+The system automatically detects whether it's running on a Raspberry Pi or a PC:
 
-# Initialize hardware and control logic
-start = initialize_system()
+- On a **PC**: The system will use simulation modules for sensors and actuators
+- On a **Raspberry Pi**: The system will use hardware modules to interface with real sensors and actuators
 
-# Example: Using the terminal interface
-from terminal.comm_layer_terminal import CommLayerTerminal
-terminal_interface = CommLayerTerminal(start)
-terminal_interface.run()
-
-# Server configuration
-server_config = {
-    "server_address": "your.server.address"
-}
-
-# Initialize HTTP communication
-http = http_comm(server_config, terminal_interface)
-http.run()
-
-# Start web interface (optional)
-from web.comm_layer_web import create_app
-app = create_app(terminal_interface)
-app.run(host='0.0.0.0', port=8080)
+Start the application with:
+```sh
+python3 start.py
 ```
+
+Make sure to adjust the configuration in `config/temp_reg.config` as needed for your environment before starting the system.
 
 ---
 
-## File Structure
+## Configuration
 
+The system uses a configuration file located at `config/temp_reg.config` to set controller parameters and server settings.
+
+Example configuration:
+```ini
+[Controller]
+type = pid
+setpoint = 10.0
+hysteresis = 0.5
+ramp = 0
+k_p = 20.0
+k_i = 0.02
+ctlperiod = 30
+dead_time = 600
+
+[Server]
+server_address = server_url
 ```
-.
-├── dbg.py
-├── http_comm.py
-├── pid.py
-├── pt100.py
-├── ScanUtility.py
-├── socket_comm.py
-├── stirrer.py
-├── testDataLogger.py
-├── tilt2_client.py
-├── tilt2_test.py
-├── two_point_control.py
-├── dataLogger.py
-├── dummySensor.py
-├── ntc.py
-├── pt100_2.py
-├── relay_ctrl.py
-├── sensor.py
-├── start.py
-├── sysinfo.py
-├── tilt2_bleak.py
-├── tilt2_server.py
-├── timer.py
-├── doc.md
-├── terminal/
-│   └── comm_layer_terminal.py
-├── web/
-│   ├── comm_layer_web.py
-│   ├── templates/
-│   │   └── dashboard.html
-│   ├── static/
-│   │   └── css/
-│   │       └── bootstrap.min.css
-│   └── README.md
-└── docs/
-    └── brewing_control_system_uml.svg
-```
+
+- **Controller** section: Sets the controller type (pid or two-point), setpoint temperature, PID parameters, and timing settings.
+- **Server** section: Configures the remote server address for communication.
+
+
+## UML
+
+![UML](docs/brewing_control_system_uml.svg)

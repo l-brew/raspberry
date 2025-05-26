@@ -1,189 +1,219 @@
 @startuml
-' Core Control & Communication
-class "terminal/comm_layer_terminal.py" as CommLayerTerminal {
-    - start
-    + __init__(start)
-    + command(form: dict)
-    + get_status_dict()
-    + update()
-}
-class http_comm {
-    - server_config
-    - comm
-    - ssl_context
-    - lock
-    + __init__(server_config, comm)
-    + run()
-    + update()
-    + listenToServer()
-    + fullStatus()
-    + escape(s)
-}
-class socket_comm {
-    - host
-    - port
-    - comm_layer_terminal
-    + __init__(host, port, comm_layer_terminal)
-    + run()
-    + send(data)
-    + receive()
-}
 
-' Web Interface
-package "Web Interface" {
+' =================== Web Interface ===================
+package "web" {
     class FlaskApp {
-        - comm_layer_terminal
-        + __init__(comm_layer_terminal)
-        + run()
-        + index()
-        + dashboard()
-        + api_status()
-        + api_command()
+      +__init__(comm_layer_terminal)
+      +run()
+      +index()
+      +dashboard()
+      +api_status()
+      +api_command()
     }
+
     class WebModule {
-        - comm_layer_terminal
-        + __init__(comm_layer_terminal)
-        + get_system_status()
-        + send_command(cmd)
-        + format_data_for_display()
+      +__init__(comm_layer_terminal)
+      +get_system_status()
+      +send_command(cmd)
+      +format_data_for_display()
     }
-    class "web/comm_layer_web.py" as CommLayerWeb {
-        - comm_layer_terminal
-        + __init__(comm_layer_terminal)
-        + get_system_status()
-        + send_command(cmd)
+
+    class CommLayerWeb {
+      +__init__(comm_layer_terminal)
+      +get_system_status()
+      +send_command(cmd)
     }
 }
 
-' Web Templates & Static Files
-package "Templates & Static" {
-    class "dashboard.html" as DashboardTemplate
-    class "index.html" as IndexTemplate
-    class "bootstrap.min.css" as BootstrapCSS
-    class "custom.css" as CustomCSS
-    class "brewing.js" as BrewingJS
+' =================== Communication Layer ===================
+package "comm_layer" {
+    class CommLayerTerminal {
+      +__init__(start)
+      +command(form: dict)
+      +get_status_dict()
+      +update()
+    }
+
+    class http_comm {
+      +__init__(server_config, comm)
+      +run()
+      +update()
+      +listenToServer()
+      +fullStatus()
+      +escape(s)
+    }
+
+    class socket_comm {
+      +__init__(host, port, comm_layer_terminal)
+      +run()
+      +send(data)
+      +receive()
+    }
+    
+    class Connection {
+      +__init__(msg_queue, socket, conn_closed_callback, comm)
+      +send_msg_task()
+      +recv_msg_task()
+    }
+
+    class Packet {
+      +__init__(data)
+      +get_packet_size()
+      +get_data_size()
+      +get_packet()
+    }
 }
 
-' Sensors & Actuators
-class Sensor {
-    + read()
-}
-class PT100 {
-    - channel
-    - calibration
-    + __init__(channel, calibration)
-    + read_temperature()
-}
-class PT100_2 {
-    - channel
-    - calibration
-    + __init__(channel, calibration)
-    + read_temperature()
-}
-class NTC {
-    - pin
-    - beta
-    - r0
-    + __init__(pin, beta, r0)
-    + read_temperature()
-}
-class DummySensor {
-    + read()
-}
-class RelayCtrl {
-    - relay_pins
-    + __init__(relay_pins)
-    + set_state(relay, state)
-    + get_state(relay)
-}
-class Stirrer {
-    - pin
-    - speed
-    + __init__(pin)
-    + set_speed(speed)
-    + start()
-    + stop()
+' =================== Terminal ===================
+package "terminal" {
+    class CommLayerTerminalServer {
+      +__init__(comm_layer, host, port)
+      +start()
+      +stop()
+      +handle_client(client_sock)
+      +process_command(line)
+      +_set_param(param, value)
+      +_get_param(param)
+      +_simple_command(param, value)
+      +_rampup2(temp, minutes)
+      +_status()
+    }
 }
 
-' Utilities & Support
-class PID {
-    - kp
-    - ki
-    - kd
-    - setpoint
-    - output_limits
-    + __init__(kp, ki, kd, setpoint, output_limits)
-    + compute(measurement)
-    + reset()
-}
-class TwoPointControl {
-    - setpoint
-    - hysteresis
-    + __init__(setpoint, hysteresis)
-    + compute(measurement)
-}
-class Timer {
-    + start()
-    + stop()
-    + elapsed()
-}
-class ScanUtility {
-    + scan_devices()
-    + scan_network()
-}
-class DataLogger {
-    - filename
-    - buffer
-    + __init__(filename)
-    + log(data)
-    + flush()
+' =================== Controllers ===================
+package "controllers" {
+    class Pid {
+      +__init__(...)
+      +calculate(actVal)
+      +setSetPoint(setPoint)
+      +getSetPoint()
+      +getErr()
+      +setErr(err)
+      +getI_err()
+      +setI_err(i_err)
+      +getK_p()
+      +setK_p(k_p)
+      +getK_i()
+      +setK_i(k_i)
+      +getI_sat_p()
+      +setI_sat_p(i_sat_p)
+      +getI_sat_n()
+      +setI_sat_n(i_sat_n)
+      +getCtlSig()
+      +setCtlSig(ctlSig)
+      +freeze()
+      +unfreeze()
+      +getFrozen()
+    }
+
+    enum Two_point_state {
+      IDLE
+      HEATING
+      COOLING
+    }
+
+    class Two_point {
+      +__init__(setPoint, hysteresis, dead_time)
+      +calculate(actVal)
+    }
 }
 
-' Tilt Hydrometer Integration
-class Tilt2Client {
-    + scan()
-    + get_reading()
-}
-class Tilt2Server {
-    + start_server()
-    + handle_request()
+' =================== Sensors and Actuators ===================
+package "sensors_actuators" {
+    abstract class Sensor {
+      +read()
+      +get_value()
+      +calibrate()
+    }
+
+    class dummySensor {
+      +__init__(initial_value)
+      +read()
+      +set_value(value)
+    }
+
+    class Ntc {
+      +__init__(pin, r_ref)
+      +read()
+      +calculate_temperature(resistance)
+    }
+
+    class PT100 {
+      +__init__(device_file)
+      +read()
+      +read_temp_raw()
+    }
+
+    class Interpolate {
+      +__init__(x_points, y_points)
+      +interpolate(x)
+    }
+
+    class Tilt2 {
+      +__init__(mac_address)
+      +connect()
+      +read_gravity()
+      +read_temperature()
+      +disconnect()
+    }
+
+    class Relay_ctrl {
+      +__init__(pin, sensor, controller)
+      +turn_on()
+      +turn_off()
+      +is_on()
+      +update()
+    }
+
+    class Stirrer {
+      +__init__(pin, pwm_frequency)
+      +set_speed(percent)
+      +start()
+      +stop()
+      +is_running()
+    }
 }
 
-' Relationships
-CommLayerTerminal --> Sensor : uses
-CommLayerTerminal --> RelayCtrl : controls
-CommLayerTerminal --> Stirrer : controls
-CommLayerTerminal --> PID : uses
-CommLayerTerminal --> TwoPointControl : uses
-CommLayerTerminal --> DataLogger : logs to
-http_comm --> CommLayerTerminal : communicates
-socket_comm --> CommLayerTerminal : communicates
-PT100 --|> Sensor
-PT100_2 --|> Sensor
-NTC --|> Sensor
-DummySensor --|> Sensor
-Tilt2Server --> Tilt2Client : aggregates
-
-' Web Interface Relationships
+' =================== Relationships ===================
+' Web relationships
 FlaskApp --> WebModule : uses
-WebModule --> CommLayerTerminal : uses
-CommLayerWeb --> CommLayerTerminal : interacts
-FlaskApp --> DashboardTemplate : renders
-FlaskApp --> IndexTemplate : renders
-DashboardTemplate ..> BootstrapCSS : styles
-DashboardTemplate ..> CustomCSS : styles
-DashboardTemplate ..> BrewingJS : uses
-IndexTemplate ..> BootstrapCSS : styles
-IndexTemplate ..> CustomCSS : styles
+WebModule --> CommLayerWeb : uses
+CommLayerWeb --> CommLayerTerminal : uses
 
-' ' Browser interaction
-' actor Browser
-' Browser --> FlaskApp : HTTP requests
+' Comm layer relationships
+socket_comm --> CommLayerTerminal : uses
+http_comm --> CommLayerTerminal : uses
+Connection o-- socket_comm : created-by
+Packet o-- Connection : used-by
 
-' ' Note: start.py is the entry point, not a class
+' Terminal relationships
+CommLayerTerminalServer o-- CommLayerTerminal : uses
 
-' Utilities
-class sysinfo <<utility>>
-class dbg <<utility>>
+' Controller relationships
+Two_point *-- Two_point_state : state
+
+' Sensor relationships
+Sensor <|-- PT100
+Sensor <|-- Ntc
+dummySensor ..|> Sensor : implements
+PT100 o-- Interpolate : may use
+Ntc o-- Interpolate : may use
+Tilt2 -- "Bluetooth/BLE" : uses
+
+' Actuator relationships
+Relay_ctrl o-- Sensor : reads temperature
+Relay_ctrl o-- Pid : uses control logic
+Relay_ctrl o-- Two_point : may use control logic
+
+' Cross-package relationships
+CommLayerTerminal --> Pid : may use
+CommLayerTerminal --> Two_point : may use
+CommLayerTerminal o-- Sensor : uses
+CommLayerTerminal o-- Relay_ctrl : controls heater/cooler
+CommLayerTerminal o-- Stirrer : controls stirring
+CommLayerTerminal o-- Tilt2 : reads gravity/temp
+
+note "Uses dashboard.html, index.html templates" as N1
+FlaskApp .. N1
 
 @enduml
