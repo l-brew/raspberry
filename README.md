@@ -4,6 +4,8 @@
 - [Brewing Control System](#brewing-control-system)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+  - [Running the System](#running-the-system)
+  - [Configuration](#configuration)
   - [Architecture](#architecture)
   - [Module Descriptions](#module-descriptions)
     - [Core Control \& Communication](#core-control--communication)
@@ -41,14 +43,53 @@
       - [`web/static/css/bootstrap.min.css`](#webstaticcssbootstrapmincss)
       - [`web/README.md`](#webreadmemd)
   - [Extending the System](#extending-the-system)
-  - [Running the System](#running-the-system)
-  - [Configuration](#configuration)
   - [UML](#uml)
 
 
 ## Overview
 
 This project is a modular, extensible brewing control system that runs on a raspberry pi. It supports real-time monitoring and control of brewing hardware, secure communication with remote servers, and integration with various sensors and actuators. The system is designed for robustness, thread safety, and easy extensibility.
+
+---
+
+## Running the System
+
+The system automatically detects whether it's running on a Raspberry Pi or a PC:
+
+- On a **PC**: The system will use simulation modules for sensors and actuators
+- On a **Raspberry Pi**: The system will use hardware modules to interface with real sensors and actuators
+
+Start the application with:
+```sh
+python3 start.py
+```
+
+Make sure to adjust the configuration in `config/temp_reg.config` as needed for your environment before starting the system.
+
+---
+
+## Configuration
+
+The system uses a configuration file located at `config/temp_reg.config` to set controller parameters and server settings.
+
+Example configuration:
+```ini
+[Controller]
+type = pid
+setpoint = 10.0
+hysteresis = 0.5
+ramp = 0
+k_p = 20.0
+k_i = 0.02
+ctlperiod = 30
+dead_time = 600
+
+[Server]
+server_address = server_url
+```
+
+- **Controller** section: Sets the controller type (pid or two-point), setpoint temperature, PID parameters, and timing settings.
+- **Server** section: Configures the remote server address for communication.
 
 ---
 
@@ -280,46 +321,6 @@ The system is organized into the following layers:
 - **Add web features:** Extend `web/comm_layer_web.py` and `dashboard.html` for new controls or visualizations.
 
 ---
-
-## Running the System
-
-The system automatically detects whether it's running on a Raspberry Pi or a PC:
-
-- On a **PC**: The system will use simulation modules for sensors and actuators
-- On a **Raspberry Pi**: The system will use hardware modules to interface with real sensors and actuators
-
-Start the application with:
-```sh
-python3 start.py
-```
-
-Make sure to adjust the configuration in `config/temp_reg.config` as needed for your environment before starting the system.
-
----
-
-## Configuration
-
-The system uses a configuration file located at `config/temp_reg.config` to set controller parameters and server settings.
-
-Example configuration:
-```ini
-[Controller]
-type = pid
-setpoint = 10.0
-hysteresis = 0.5
-ramp = 0
-k_p = 20.0
-k_i = 0.02
-ctlperiod = 30
-dead_time = 600
-
-[Server]
-server_address = server_url
-```
-
-- **Controller** section: Sets the controller type (pid or two-point), setpoint temperature, PID parameters, and timing settings.
-- **Server** section: Configures the remote server address for communication.
-
 
 ## UML
 
