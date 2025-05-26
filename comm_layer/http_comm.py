@@ -6,7 +6,7 @@ import time
 from urllib.parse import urlencode, quote_plus
 import traceback
 import logging
-from comm_layer import Comm_layer
+from comm_layer.comm_layer import Comm_layer
 
 class http_comm:
     def __init__(self,server_config ,comm:Comm_layer):
@@ -64,6 +64,7 @@ class http_comm:
                 f.close()
             except:
                 print(traceback.format_exc())
+                print(body)
                 time.sleep(5)
                 continue
             self.lock.acquire()

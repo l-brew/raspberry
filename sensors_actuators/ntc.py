@@ -1,7 +1,7 @@
 #import Adafruit_BBIO.ADC as ADC
 import time
 import math
-from sensor import Sensor
+from .sensor import Sensor
 
 KEL = 273.15
 BETA=4060.

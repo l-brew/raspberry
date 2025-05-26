@@ -2,7 +2,7 @@ import random
 import threading
 import time
 
-class SimPT100:
+class PT100:
     def __init__(self):
         self.val = 20.0  # Start at room temp
         self.tempList = [self.val]
@@ -28,7 +28,7 @@ class SimPT100:
     def stop(self):
         self._running = False
 
-class SimNtc:
+class Ntc:
     def __init__(self, pin, beta=3889, r0=10000, t0=298.15):
         self.val = 25.0  # Start at room temp
         self.tempList = [self.val]
@@ -48,7 +48,7 @@ class SimNtc:
     def getVal(self):
         return self.val
 
-class SimTilt2:
+class Tilt2:
     def __init__(self):
         self.temp = 20.0
         self.grav = 1.050
@@ -69,7 +69,7 @@ class SimTilt2:
     def stop(self):
         self._running = False
 
-class SimSysinfo:
+class Sysinfo:
     def __init__(self):
         pass
 
@@ -77,7 +77,7 @@ class SimSysinfo:
         # Simulate CPU temp between 40 and 60 C
         return random.uniform(40, 60)
 
-class SimStirrer:
+class Stirrer:
     def __init__(self, pwm_pin, sd_pin):
         self.pwm_pin = pwm_pin
         self.sd_pin = sd_pin
@@ -121,7 +121,7 @@ class SimStirrer:
     def isRunning(self):
         return self.duty > 0
 
-class SimRelayCtrl:
+class Relay_ctrl:
     def __init__(self, comm, pid, sensor, gpioH, gpioC, period=3600):
         self.setPoint = 50
         self.gpioH = gpioH

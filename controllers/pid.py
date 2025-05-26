@@ -1,4 +1,4 @@
-class pid:
+class Pid:
     def __init__(self,err=0.0,i_err=0.0,k_p=100.,k_i=0.001,i_sat_p=60,i_sat_n=-60,setPoint=20.):
         self.err=err
         self.i_err=i_err

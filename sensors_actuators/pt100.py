@@ -1,7 +1,7 @@
 import spidev
 import time
 from bisect import bisect_right
-from sensor import Sensor
+from .sensor import Sensor
 from gpiozero import LED
 
 CS_PIN= 'P9_25'

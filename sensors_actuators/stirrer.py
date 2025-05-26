@@ -2,7 +2,7 @@ import threading
 import RPi.GPIO as GPIO
 import time
 import traceback
-class stirrer:
+class Stirrer:
     def __init__(self,pwm_pin,sd_pin):
         self.pwm_pin=pwm_pin
         self.sd_pin=sd_pin

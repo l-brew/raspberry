@@ -1,9 +1,9 @@
-
 import socket
 import threading
 import traceback
 from typing import Optional
-import comm_layer
+from comm_layer.comm_layer import Comm_layer
+
 
 # Help text displayed when user types 'help' command
 HELP_TEXT = """
@@ -49,7 +49,7 @@ class CommLayerTerminalServer:
     Allows users to connect via telnet/netcat and issue commands to control and query the brewing system.
     """
 
-    def __init__(self, comm_layer: comm_layer.Comm_layer, host: str = '0.0.0.0', port: int = 5555) -> None:
+    def __init__(self, comm_layer: Comm_layer, host: str = '0.0.0.0', port: int = 5555) -> None:
         """
         Initialize the terminal server.
 
